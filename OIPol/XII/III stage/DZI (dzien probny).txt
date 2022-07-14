@@ -1,0 +1,112 @@
+//80/100 https://szkopul.edu.pl/problemset/problem/atihJqrcNoLaL1fJoBZF1UA9/site/?key=statement
+//Two tests memory limit exceed
+//
+#include <bits/stdc++.h>
+using namespace std;
+#define pii pair<int,int>
+#define pb push_back
+#define X first
+#define Y second
+#define  up_limit 1000002
+const int INF= 1000000007;
+#define ll long long
+int n,m;
+ll k;
+vector<int> graph[up_limit]={};
+
+bool vis[up_limit]={};
+int ilosc_osi[up_limit]={};//ilosc wierzchowlkow na osi na danej skladowej
+bool na_skl[up_limit]={};//czy dany wierzcholek jest na osi i na jakiej
+int wierz_indeksu[up_limit]={};//ilosc mozliwych z wychodzacaecgo wierzcholka wierzcholkow ktore mozna przemienic
+bool have_friends[up_limit]={};
+
+
+/// 
+int dfs(int v , int r,int ind)
+{
+    int b=1;
+    if(vis[v])return 0;
+    vis[v]=true;
+    if(graph[v].size()>1){ na_skl[v]=true; ilosc_osi[ind]++;}
+    if(graph[v].size()==1 && v==ind && graph[graph[v][0]].size()==1){ na_skl[v]=true; ilosc_osi[ind]=1;}
+    int h=0;
+    for(auto w: graph[v])
+    {
+        if(w!=r)
+            b=min(b,dfs(w,v,ind));
+        if(graph[w].size()==1)h++;    
+    }
+    wierz_indeksu[v]=h;
+    return b;
+}
+
+ll silnia(ll a)
+{
+
+    ll w=1;
+   for(;a>=2;a--)w= (w*a)%k;
+   return w;
+}
+int main()
+{
+    cin.tie(); ios_base::sync_with_stdio(0);
+      
+    cin>>n>>m>>k;
+    if(m>=n){cout<<0; return 0;}
+    ll bwf=0;
+     for(int i=0; i<m;i++)
+     {
+         int a,b;
+         cin>>a>>b;
+         graph[a].pb(b);
+         graph[b].pb(a);
+         if(!have_friends[a])bwf++;
+        if(!have_friends[b])bwf++;
+         have_friends[a]=true;
+         have_friends[b]=true;
+         
+     }
+    //sprawdzanie poprawnosci
+     for(int i=1;i<=n;i++)
+     {
+         if(vis[i]==0 ) //sprawdzanie acyklicznosci
+        {
+            int h=dfs(i,0,i);
+            if(h==0){cout<<0; return 0;}
+        }
+        int c=0;
+        for(auto w: graph[i])//sprawdzanie czy nie ma za duzo sasiadow o stopniu wyzszym niz 1 (git)
+        {
+            if(graph[w].size()>=2)c++;
+        }  
+        if(c>=3){cout<<0; return 0;}
+
+
+     }
+
+    ll sol=1;
+    ll p=1;
+    for(int i=1;i<=n;i++)
+    {
+        bool os=na_skl[i];
+        if(os && wierz_indeksu[i]>1)//czy nalezy do  jakiejs osi
+        {
+           ( sol*=silnia(wierz_indeksu[i]) )%=k;
+
+        }
+        if(ilosc_osi[i])
+        {
+            (sol*=(ll)2)%=k;
+            if(ilosc_osi[i]>=2)(sol*=(ll)2)%=k;
+            sol= (sol*p)%k;
+            p++;
+        }
+    }
+    ll w=n-bwf;//wierzcholki pojedyncze
+    for(int i=2;i<=(1+w);i++)
+    {
+       sol= (sol* (bwf+i))%k;
+    }
+    cout<<sol;
+    return 0;
+}
